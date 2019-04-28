@@ -5,13 +5,7 @@ from discord.ext.commands import Bot
 chromatique = Chromatique()
 
 bot = Bot(command_prefix="!")
-
-@bot.command()
-async def test(ctx):
-    print(ctx.guild)
-    print(ctx.message)
-    print(ctx.author)
-    await ctx.send('hey {0} : voici ton message {1}'.format(ctx.author, ctx.message.content))
+bot.remove_command('help')
 
 @bot.command()
 async def chroma(ctx, arg):
@@ -35,7 +29,8 @@ async def get_all_shiny(ctx):
     embed.add_field(name='2eme Génération', value=chromatique.get_gen(2), inline=False)
     embed.add_field(name='3eme Génération', value=chromatique.get_gen(3), inline=False)
     embed.add_field(name='4eme Génération', value=chromatique.get_gen(4), inline=False)
-    await ctx.send(content='Hey {0} : Voici la liste des chromatiques disponible dans Pokemon GO'.format(author_name),embed = embed)
+    msg = await ctx.send(content='Hey {0} : Voici la liste des chromatiques disponible dans Pokemon GO'.format(author_name),embed = embed)
+    await msg.add_reaction(discord.Emoji(name='wink'))
 
 @bot.command()
 async def get_shiny(ctx, arg):
@@ -50,6 +45,20 @@ async def get_shiny(ctx, arg):
     embed.add_field(name='Les chromatiques de la {0}{1} Génération'.format(arg,content), value=chromatique.get_gen(arg), inline=False)
     msg = await ctx.send(content='Hey {0} : Voici la liste des chromatiques disponible dans Pokemon GO'.format(author_name),embed = embed)
     await msg.add_reaction('\U0001F44D')
+
+@bot.command(pass_context=True)
+async def help(ctx):
+    helpcommand = discord.Embed(
+        title = 'Voici les commande pour le bot',
+        color = discord.Color.orange(),
+    )
+    helpcommand.add_field(name='!chroma nom_du_pokemon', value='Cherche la version chromatique du pokemon', inline=True)
+    helpcommand.add_field(name='!get_all_shiny', value='Retourne la liste des chromatiques disponible dans le jeu Pokemon Go', inline=True)
+    helpcommand.add_field(name='!get_shiny choix_de_la_génération', value='Retourne la liste des chromatiques de la génération choisi disponible dans le jeu Pokemon Go', inline=True)
+    helpcommand.add_field(name='!help', value='Retourne cette aide', inline=True)
+    helpcommand.set_author(name='Help')
+    message = await ctx.send(content='{0}'.format(ctx.message.author), embed=helpcommand)
+    await message.add_reaction('\U0001F44D')
 
 @bot.event
 async def on_command_error(ctx, error):

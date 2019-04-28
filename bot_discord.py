@@ -56,7 +56,14 @@ async def help(ctx):
     helpcommand.add_field(name='!help', value='Retourne cette aide', inline=True)
     helpcommand.set_author(name='Help')
     message = await ctx.send(content='{0}'.format(ctx.message.author), embed=helpcommand)
-    await message.add_reaction('\U0001F44D')
+    await message.add_reaction('👍')
+
+@bot.event
+async def on_reaction_add(reaction, user):
+    channel = reaction.message.channel
+    async for use in reaction.users():
+        if reaction.emoji == '👍':
+            await channel.send('Ravi de t\'aider {0}, merci pour ton {1}'.format(user.name, reaction.emoji))
 
 @bot.event
 async def on_command_error(ctx, error):

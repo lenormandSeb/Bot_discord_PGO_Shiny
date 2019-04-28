@@ -3,7 +3,6 @@ import discord
 from discord.ext.commands import Bot
 
 chromatique = Chromatique()
-
 bot = Bot(command_prefix="!")
 bot.remove_command('help')
 
@@ -29,8 +28,7 @@ async def get_all_shiny(ctx):
     embed.add_field(name='2eme Génération', value=chromatique.get_gen(2), inline=False)
     embed.add_field(name='3eme Génération', value=chromatique.get_gen(3), inline=False)
     embed.add_field(name='4eme Génération', value=chromatique.get_gen(4), inline=False)
-    msg = await ctx.send(content='Hey {0} : Voici la liste des chromatiques disponible dans Pokemon GO'.format(author_name),embed = embed)
-    await msg.add_reaction(discord.Emoji(name='wink'))
+    await ctx.send(content='Hey {0} : Voici la liste des chromatiques disponible dans Pokemon GO'.format(author_name),embed = embed)
 
 @bot.command()
 async def get_shiny(ctx, arg):

@@ -1,2 +1,2 @@
 web: gunicorn app.wsgi
-worker: python3 bot bot_discord.py
+worker: python3 bot_discord.py

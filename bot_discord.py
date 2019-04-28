@@ -51,5 +51,8 @@ async def get_shiny(ctx, arg):
     msg = await ctx.send(content='Hey {0} : Voici la liste des chromatiques disponible dans Pokemon GO'.format(author_name),embed = embed)
     await msg.add_reaction('\U0001F44D')
 
+@bot.event
+async def on_command_error(ctx, error):
+    await ctx.send(content='Hey {0}, désolé je n\'ai pas compris ta demande'.format(ctx.message.author.name))
 
 bot.run('NTcxMDQ3MTE2NDA4MDk0NzMw.XMIZGA.uiYYWBCLq94u66YdVLIu4FMbM4I')

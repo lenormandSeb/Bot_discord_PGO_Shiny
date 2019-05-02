@@ -5,6 +5,7 @@ import os
 from discord.ext.commands import Bot
 
 TOKEN = os.environ['TOKEN']
+print(TOKEN)
 chromatique = Chromatique()
 bot = Bot(command_prefix="!")
 bot.remove_command('help')

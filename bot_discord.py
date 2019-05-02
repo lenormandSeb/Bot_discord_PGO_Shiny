@@ -1,10 +1,33 @@
 from chromatique import Chromatique
 import discord
+import json
+import os
 from discord.ext.commands import Bot
 
+TOKEN = 'NTcxMDQ3MTE2NDA4MDk0NzMw.XMIZGA.uiYYWBCLq94u66YdVLIu4FMbM4I'
 chromatique = Chromatique()
 bot = Bot(command_prefix="!")
 bot.remove_command('help')
+os.chdir('/home/seb/bot_discord')
+
+@bot.event
+async def on_ready():
+    guilds = bot.guilds
+    for i, guild in enumerate(guilds):
+        with open(guild.name+'.json', 'a') as f:
+            if os.path.getsize(f.name) == 0:
+                json.dump({}, f)
+
+
+@bot.event
+async def on_member_join(member):
+    with open(member.guild.name+'.json', 'r') as f:
+        users = json.load(f)
+
+    await update_data(users, str(member.id))
+
+    with open(member.guild.name+'.json', 'w') as f:
+        json.dump(users, f)
 
 @bot.command()
 async def chroma(ctx, arg):
@@ -44,6 +67,24 @@ async def get_shiny(ctx, arg):
     msg = await ctx.send(content='Hey {0} : Voici la liste des chromatiques disponible dans Pokemon GO'.format(author_name),embed = embed)
     await msg.add_reaction('\U0001F44D')
 
+@bot.command()
+async def set_shiny(ctx, param):
+    with open(ctx.message.author.guild.name+'.json', 'r') as f:
+        users = json.load(f)
+    
+    await update_data(users, str(ctx.author.id))
+    await add_chromatique(users, str(ctx.author.id), param)
+    await lvl_up(ctx, users, str(ctx.author.id), ctx.message.channel)
+
+    with open(ctx.message.author.guild.name+'.json', 'w') as f:
+        json.dump(users, f)
+
+    addChroma = discord.Embed(
+        title = 'J\'ai bien ajouté tes chromatique {0}'.format(ctx.message.author.name),
+        color = discord.Color.green()
+    )
+    await ctx.send(embed=addChroma)
+
 @bot.command(pass_context=True)
 async def help(ctx):
     helpcommand = discord.Embed(
@@ -58,6 +99,29 @@ async def help(ctx):
     message = await ctx.send(content='{0}'.format(ctx.message.author), embed=helpcommand)
     await message.add_reaction('👍')
 
+async def update_data(users, user):
+    if not str(user) in users:
+        users[user]= {}
+        users[user]['experience'] = 0
+        users[user]['lvl'] = 1
+        users[user]['chromatique'] = []
+
+async def add_chromatique(users, user, param):
+    count = 0
+    for pokemon in param.split(','):
+        if not pokemon.strip() in users[str(user)]['chromatique']:
+            count += 1
+            users[str(user)]['chromatique'].append(pokemon.strip())
+    users[str(user)]['experience'] += count
+
+async def lvl_up(ctx, users, user, channel):
+    experience = users[user]['experience']
+    lvl_start = users[user]['lvl']
+    lvl_end = int(experience ** (1/2))
+    if int(lvl_start) < lvl_end:
+        await channel.send(content='{0} as gagné un niveau, tu es maintenant lvl {1}'.format(ctx.author.name, lvl_end))
+        users[user]['lvl'] = lvl_end
+
 @bot.event
 async def on_reaction_add(reaction, user):
     channel = reaction.message.channel
@@ -69,4 +133,4 @@ async def on_reaction_add(reaction, user):
 async def on_command_error(ctx, error):
     await ctx.send(content='Hey {0}, désolé je n\'ai pas compris ta demande'.format(ctx.message.author.name))
 
-bot.run('NTcxMDQ3MTE2NDA4MDk0NzMw.XMIZGA.uiYYWBCLq94u66YdVLIu4FMbM4I')
+bot.run(TOKEN)

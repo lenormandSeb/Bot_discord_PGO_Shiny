@@ -4,7 +4,7 @@ import json
 import os
 from discord.ext.commands import Bot
 
-TOKEN = 'NTcxMDQ3MTE2NDA4MDk0NzMw.XMIZGA.uiYYWBCLq94u66YdVLIu4FMbM4I'
+TOKEN = os.environ['TOKEN']
 chromatique = Chromatique()
 bot = Bot(command_prefix="!")
 bot.remove_command('help')

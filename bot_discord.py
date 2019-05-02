@@ -86,6 +86,17 @@ async def set_shiny(ctx, param):
     )
     await ctx.send(embed=addChroma)
 
+@bot.command()
+async def get_my_shiny(ctx):
+    with open(ctx.message.author.guild.name+'.json', 'r') as f:
+        users = json.load(f)
+
+    embed = discord.Embed(
+        color = discord.Color.blue()
+    )
+    embed.add_field(name='Voici la liste de tes {0} chromatiques, {1}'.format(len(users[str(ctx.message.author.id)]['chromatique']) , ctx.message.author.name), value = ",".join(users[str(ctx.message.author.id)]['chromatique']))
+    ctx.send(embed=embed)
+
 @bot.command(pass_context=True)
 async def help(ctx):
     helpcommand = discord.Embed(

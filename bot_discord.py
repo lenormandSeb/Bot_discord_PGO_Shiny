@@ -4,8 +4,8 @@ import json
 import os
 from discord.ext.commands import Bot
 
-TOKEN = os.environ['TOKEN']
-print(TOKEN)
+access_token = os.environ['ACCESS_TOKEN']
+
 chromatique = Chromatique()
 bot = Bot(command_prefix="!")
 bot.remove_command('help')
@@ -134,4 +134,4 @@ async def on_reaction_add(reaction, user):
 async def on_command_error(ctx, error):
     await ctx.send(content='Hey {0}, désolé je n\'ai pas compris ta demande'.format(ctx.message.author.name))
 
-bot.run(TOKEN)
+bot.run(access_token)

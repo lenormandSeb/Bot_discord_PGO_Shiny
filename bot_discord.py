@@ -9,7 +9,7 @@ access_token = os.environ['ACCESS_TOKEN']
 chromatique = Chromatique()
 bot = Bot(command_prefix="!")
 bot.remove_command('help')
-os.chdir('/home/seb/bot_discord')
+os.chdir('/')
 
 @bot.event
 async def on_ready():

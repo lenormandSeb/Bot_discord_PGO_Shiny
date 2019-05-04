@@ -15,9 +15,10 @@ os.chdir('/')
 async def on_ready():
     guilds = bot.guilds
     for i, guild in enumerate(guilds):
-        with open(guild.name+'.json', 'a') as f:
-            if os.path.getsize(f.name) == 0:
-                json.dump({}, f)
+        if os.path.exists(guild.name+'.json'):
+            with open(guild.name+'.json', 'a') as f:
+                if os.path.getsize(f.name) == 0:
+                    json.dump({}, f)
 
 
 @bot.event
@@ -72,6 +73,7 @@ async def get_shiny(ctx, arg):
 async def set_shiny(ctx, param):
     with open(ctx.message.author.guild.name+'.json', 'r') as f:
         users = json.load(f)
+        print(users)
     
     await update_data(users, str(ctx.author.id))
     await add_chromatique(users, str(ctx.author.id), param)

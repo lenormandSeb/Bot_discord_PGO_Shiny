@@ -3,25 +3,29 @@ import discord
 import json
 import os
 from discord.ext.commands import Bot
+import redis
 
-access_token = os.environ['ACCESS_TOKEN']
+#access_token = os.environ['ACCESS_TOKEN']
+access_token = "NTcxMDQ3MTE2NDA4MDk0NzMw.XMIZGA.uiYYWBCLq94u66YdVLIu4FMbM4I"
 
 chromatique = Chromatique()
 bot = Bot(command_prefix="!")
 bot.remove_command('help')
-os.chdir('/')
 
 @bot.event
 async def on_ready():
-    guilds = bot.guilds
-    for i, guild in enumerate(guilds):
-        with open(guild.name+'.json', 'a') as f:
-            if os.path.getsize(f.name) == 0:
-                json.dump({}, f)
-
+    try:
+        global conn
+        conn = redis.StrictRedis(
+            host='localhost',
+            port=6379)
+    except:
+        print('connection failed!')
 
 @bot.event
 async def on_member_join(member):
+    conn.hset(member.guild.name+':'+member.id, 'experience', 0)
+    conn.hset(member.guild.name+':'+member.id, 'lvl', 1)
     with open(member.guild.name+'.json', 'r') as f:
         users = json.load(f)
 

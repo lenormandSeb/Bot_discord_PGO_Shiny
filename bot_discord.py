@@ -2,33 +2,41 @@ from chromatique import Chromatique
 import discord
 import json
 import os
+import pymysql
 from discord.ext.commands import Bot
 
 access_token = os.environ['ACCESS_TOKEN']
+
+connection = pymysql.connect(host='localhost',
+                             user='',
+                             password='',
+                             db='')
+
+cursor = connection.cursor()
 
 chromatique = Chromatique()
 bot = Bot(command_prefix="!")
 bot.remove_command('help')
 os.chdir('/')
 
-@bot.event
-async def on_ready():
-    guilds = bot.guilds
-    for i, guild in enumerate(guilds):
-        with open(guild.name+'.json', 'a') as f:
-            if os.path.getsize(f.name) == 0:
-                json.dump({}, f)
-
-
+""" @bot.event
+async def on_ready()
+ """
 @bot.event
 async def on_member_join(member):
-    with open(member.guild.name+'.json', 'r') as f:
-        users = json.load(f)
-
-    await update_data(users, str(member.id))
-
-    with open(member.guild.name+'.json', 'w') as f:
-        json.dump(users, f)
+    #find user exist
+    find_user = "SELECT * FROM users where pseudo_id = '%s'" % (member.guild.id)
+    cursor.execute(find_user)
+    count = cursor.rowcount
+    if count == 0:
+        print('create user')
+        sql = "INSERT INTO users (pseudo, pseudo_id) VALUES ('%s', '%s')" % (member.guild.name, member.guild.id)
+        try :
+            cursor.execute(sql)
+            connection.commit()
+        except:
+            connection.rollback()
+    connection.close()
 
 @bot.command()
 async def chroma(ctx, arg):
@@ -70,15 +78,27 @@ async def get_shiny(ctx, arg):
 
 @bot.command()
 async def set_shiny(ctx, param):
-    with open(ctx.message.author.guild.name+'.json', 'r') as f:
-        users = json.load(f)
-    
-    await update_data(users, str(ctx.author.id))
-    await add_chromatique(users, str(ctx.author.id), param)
-    await lvl_up(ctx, users, str(ctx.author.id), ctx.message.channel)
-
-    with open(ctx.message.author.guild.name+'.json', 'w') as f:
-        json.dump(users, f)
+    #find user
+    find_user = "SELECT * FROM users WHERE pseudo_id = '%s'" % (ctx.message.author.id)
+    cursor.execute(find_user)
+    count = cursor.rowcount
+    if count == 0:
+        sql = "INSERT INTO users (pseudo, pseudo_id, lvl, experience) VALUES ('%s', '%s', '%d', '%d')" % (ctx.message.author.name, ctx.message.author.id, 0, 0)
+        try :
+            cursor.execute(sql)
+            connection.commit()
+        except:
+            connection.rollback()
+    else:
+        cursor.execute(find_user)
+        user = cursor.fetchall()
+        for row in user:
+            userid = row[0]
+            userpseudo = row[1]
+            useridpseudo = row[2]
+            userlvl = row[3]
+            userexp = row[4]
+        print("id= %s, pseudo= %s, idpseudo= %s, lvl= %s, exp= %s" % (userid, userpseudo, useridpseudo, userlvl, userexp))
 
     addChroma = discord.Embed(
         title = 'J\'ai bien ajouté tes chromatique {0}'.format(ctx.message.author.name),

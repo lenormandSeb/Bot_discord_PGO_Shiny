@@ -5,14 +5,12 @@ import os
 import pymysql
 from discord.ext.commands import Bot
 
-access_token = os.environ['ACCESS_TOKEN']
+#access_token = os.environ['ACCESS_TOKEN']
 
-connection = pymysql.connect(host='localhost',
+connection = pymysql.connect(host='',
                              user='',
                              password='',
                              db='')
-
-cursor = connection.cursor()
 
 chromatique = Chromatique()
 bot = Bot(command_prefix="!")
@@ -20,11 +18,24 @@ bot.remove_command('help')
 os.chdir('/')
 
 """ @bot.event
-async def on_ready()
+async def on_ready():
+    chan = bot.guilds
+    for c in chan:
+        count = 0
+        ch = c.channels
+        for a in ch:
+            if 'échange-chromatique' in a.name:
+                count = count + 1
+        if count == 0:
+            try:
+                channel = await bot.create_text_channel('échange-chromatique')
+            except:
+                print("cannot create here : '%s'" % (c))
  """
 @bot.event
 async def on_member_join(member):
     #find user exist
+    cursor = connection.cursor()
     find_user = "SELECT * FROM users where pseudo_id = '%s'" % (member.guild.id)
     cursor.execute(find_user)
     count = cursor.rowcount
@@ -77,7 +88,13 @@ async def get_shiny(ctx, arg):
     await msg.add_reaction('\U0001F44D')
 
 @bot.command()
-async def set_shiny(ctx, param):
+async def set_trade_shiny(ctx, param):
+    cursor = connection.cursor()
+    #Create tulip of pokemon
+    pokemonToTrade = []
+    for pokemons in param.split(','):
+        pokemonToTrade.append(pokemons.strip())
+
     #find user
     find_user = "SELECT * FROM users WHERE pseudo_id = '%s'" % (ctx.message.author.id)
     cursor.execute(find_user)
@@ -98,12 +115,170 @@ async def set_shiny(ctx, param):
             useridpseudo = row[2]
             userlvl = row[3]
             userexp = row[4]
-        print("id= %s, pseudo= %s, idpseudo= %s, lvl= %s, exp= %s" % (userid, userpseudo, useridpseudo, userlvl, userexp))
+
+        find_chromatique = "SELECT * FROM chromatique WHERE pseudo_id= '%s'" % (useridpseudo)
+
+        try :
+            cursor.execute(find_chromatique)
+            chromati = cursor.fetchone()
+            if chromati == None:
+                insert = "INSERT INTO chromatique (pseudo_id, tradeshiny) VALUES ('%s', '%s')" % (useridpseudo, json.dumps(pokemonToTrade))
+                cursor.execute(insert)
+                connection.commit()
+            else:
+                updateTrade = []
+                if chromati[3] != None:
+                    for po in json.loads(chromati[3]):
+                        updateTrade.append(po)
+                    for pokemon in pokemonToTrade:
+                        if not pokemon in json.loads(chromati[3]):
+                            updateTrade.append(pokemon)
+                else:
+                    updateTrade = pokemonToTrade
+                update = "UPDATE chromatique set tradeshiny='%s' WHERE pseudo_id='%s'" % (json.dumps(updateTrade), useridpseudo)
+                try:
+                    cursor.execute(update)
+                    connection.commit()
+                    cursor.close()
+                except:
+                    print('error')
+        except:
+            connection.rollback()
 
     addChroma = discord.Embed(
-        title = 'J\'ai bien ajouté tes chromatique {0}'.format(ctx.message.author.name),
+        title = 'J\'ai bien ajouté tes chromatique a échanger {0}'.format(ctx.message.author.name),
         color = discord.Color.green()
     )
+    await ctx.send(embed=addChroma)
+
+@bot.command()
+async def set_look_for_shiny(ctx, param):
+    cursor = connection.cursor()
+    #Create tulip of pokemon
+    pokemonToFind = []
+    for pokemons in param.split(','):
+        pokemonToFind.append(pokemons.strip())
+
+    #find user
+    find_user = "SELECT * FROM users WHERE pseudo_id = '%s'" % (ctx.message.author.id)
+    cursor.execute(find_user)
+    count = cursor.rowcount
+    if count == 0:
+        sql = "INSERT INTO users (pseudo, pseudo_id, lvl, experience) VALUES ('%s', '%s', '%d', '%d')" % (ctx.message.author.name, ctx.message.author.id, 0, 0)
+        try :
+            cursor.execute(sql)
+            connection.commit()
+        except:
+            connection.rollback()
+    else:
+        cursor.execute(find_user)
+        user = cursor.fetchall()
+        for row in user:
+            userid = row[0]
+            userpseudo = row[1]
+            useridpseudo = row[2]
+            userlvl = row[3]
+            userexp = row[4]
+
+        find_chromatique = "SELECT * FROM chromatique WHERE pseudo_id= '%s'" % (useridpseudo)
+
+        try :
+            cursor.execute(find_chromatique)
+            chromati = cursor.fetchone()
+            if chromati == None:
+                insert = "INSERT INTO chromatique (pseudo_id, lookforshiny) VALUES ('%s', '%s')" % (useridpseudo, json.dumps(pokemonToFind))
+                cursor.execute(insert)
+                connection.commit()
+            else:
+                updateFind = []
+                if chromati[4] != None:
+                    for po in json.loads(chromati[4]):
+                        updateFind.append(po)
+                    for pokemon in pokemonToFind:
+                        if not pokemon in json.loads(chromati[4]):
+                            updateFind.append(pokemon)
+                else:
+                    updateFind = pokemonToFind
+                update = "UPDATE chromatique set lookforshiny='%s' WHERE pseudo_id='%s'" % (json.dumps(updateFind), useridpseudo)
+                try:
+                    cursor.execute(update)
+                    connection.commit()
+                    cursor.close()
+                except:
+                    print('error')
+        except:
+            connection.rollback()
+
+    addChroma = discord.Embed(
+        title = 'J\'ai bien ajouté tes chromatiques rechercher {0}'.format(ctx.message.author.name),
+        color = discord.Color.green()
+    )
+    await ctx.send(embed=addChroma)
+
+@bot.command()
+async def set_myshiny(ctx, param):
+    cursor = connection.cursor()
+    #Create tulip of pokemon
+    MyChromatique = []
+    for pokemons in param.split(','):
+        MyChromatique.append(pokemons.strip())
+
+    #find user
+    find_user = "SELECT * FROM users WHERE pseudo_id = '%s'" % (ctx.message.author.id)
+    cursor.execute(find_user)
+    count = cursor.rowcount
+    if count == 0:
+        sql = "INSERT INTO users (pseudo, pseudo_id, lvl, experience) VALUES ('%s', '%s', '%d', '%d')" % (ctx.message.author.name, ctx.message.author.id, 0, 0)
+        try :
+            cursor.execute(sql)
+            connection.commit()
+        except:
+            connection.rollback()
+    else:
+        cursor.execute(find_user)
+        user = cursor.fetchall()
+        for row in user:
+            userid = row[0]
+            userpseudo = row[1]
+            useridpseudo = row[2]
+            userlvl = row[3]
+            userexp = row[4]
+
+        find_chromatique = "SELECT * FROM chromatique WHERE pseudo_id= '%s'" % (useridpseudo)
+
+        try :
+            cursor.execute(find_chromatique)
+            chromati = cursor.fetchone()
+            if chromati == None:
+                insert = "INSERT INTO chromatique (pseudo_id, myshiny) VALUES ('%s', '%s')" % (useridpseudo, json.dumps(MyChromatique))
+                cursor.execute(insert)
+                connection.commit()
+            else:
+                updatechro = []
+                if chromati[2] != None:
+                    for po in json.loads(chromati[2]):
+                        updatechro.append(po)
+                    for pokemon in MyChromatique:
+                        if not pokemon in json.loads(chromati[2]):
+                            updatechro.append(pokemon)
+                else:
+                    updatechro = MyChromatique
+                update = "UPDATE chromatique SET myshiny='%s' WHERE pseudo_id='%s'" % (json.dumps(updatechro), useridpseudo)
+                try:
+                    cursor.execute(update)
+                    connection.commit()
+                    cursor.close()
+                except:
+                    print('error')
+        except:
+            connection.rollback()
+
+    addChroma = discord.Embed(
+        title = 'J\'ai bien ajouté tes chromatiques {0}'.format(ctx.message.author.name),
+        color = discord.Color.green()
+    )
+    st = ','.join(MyChromatique)
+    addChroma.add_field(name='Liste des pokemon ajouté', value='{0}'.format(st), inline=True)
     await ctx.send(embed=addChroma)
 
 @bot.command(pass_context=True)
@@ -152,6 +327,7 @@ async def on_reaction_add(reaction, user):
 
 @bot.event
 async def on_command_error(ctx, error):
+    print(error)
     await ctx.send(content='Hey {0}, désolé je n\'ai pas compris ta demande'.format(ctx.message.author.name))
 
 bot.run(access_token)

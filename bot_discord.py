@@ -16,6 +16,7 @@ chromatique = Chromatique()
 bot = Bot(command_prefix="!")
 bot.remove_command('help')
 os.chdir('/')
+client = discord.Client()
 
 """ @bot.event
 async def on_ready():
@@ -85,7 +86,6 @@ async def get_shiny(ctx, arg):
         content = 'ème'
     embed.add_field(name='Les chromatiques de la {0}{1} Génération'.format(arg,content), value=chromatique.get_gen(arg), inline=False)
     msg = await ctx.send(content='Hey {0} : Voici la liste des chromatiques disponible dans Pokemon GO'.format(author_name),embed = embed)
-    await msg.add_reaction('\U0001F44D')
 
 @bot.command()
 async def set_trade_shiny(ctx, param):
@@ -145,11 +145,18 @@ async def set_trade_shiny(ctx, param):
         except:
             connection.rollback()
 
+    for chan in ctx.message.guild.channels:
+        if chan.name == "échange-chromatique":
+            channel = bot.get_channel(chan.id)
+    
     addChroma = discord.Embed(
-        title = 'J\'ai bien ajouté tes chromatique a échanger {0}'.format(ctx.message.author.name),
+        title = 'Hey, le joueur @{0} échange des pokemons chromatiques !!!!'.format(ctx.message.author.name),
         color = discord.Color.green()
     )
-    await ctx.send(embed=addChroma)
+    st = ','.join(updateTrade)
+    addChroma.add_field(name='Liste des pokemon échangeable : ', value='{0}'.format(st), inline=True)
+    await channel.send(embed=addChroma)
+
 
 @bot.command()
 async def set_look_for_shiny(ctx, param):
@@ -209,11 +216,17 @@ async def set_look_for_shiny(ctx, param):
         except:
             connection.rollback()
 
+    for chan in ctx.message.guild.channels:
+        if chan.name == "recherche-chromatique":
+            channel = bot.get_channel(chan.id)
+    
     addChroma = discord.Embed(
-        title = 'J\'ai bien ajouté tes chromatiques rechercher {0}'.format(ctx.message.author.name),
+        title = 'Hey, le joueur @{0} recherche des pokemons chromatiques !!!!'.format(ctx.message.author.name),
         color = discord.Color.green()
     )
-    await ctx.send(embed=addChroma)
+    st = ','.join(updateFind)
+    addChroma.add_field(name='Liste des pokemon recherche : ', value='{0}'.format(st), inline=True)
+    await channel.send(embed=addChroma)
 
 @bot.command()
 async def set_myshiny(ctx, param):
@@ -284,7 +297,7 @@ async def set_myshiny(ctx, param):
 @bot.command(pass_context=True)
 async def help(ctx):
     helpcommand = discord.Embed(
-        title = 'Voici les commande pour le bot',
+        title = 'Voici les commandes pour le bot',
         color = discord.Color.orange(),
     )
     helpcommand.add_field(name='!chroma nom_du_pokemon', value='Cherche la version chromatique du pokemon', inline=True)
@@ -293,7 +306,6 @@ async def help(ctx):
     helpcommand.add_field(name='!help', value='Retourne cette aide', inline=True)
     helpcommand.set_author(name='Help')
     message = await ctx.send(content='{0}'.format(ctx.message.author), embed=helpcommand)
-    await message.add_reaction('👍')
 
 async def update_data(users, user):
     if not str(user) in users:
@@ -320,10 +332,11 @@ async def lvl_up(ctx, users, user, channel):
 
 @bot.event
 async def on_reaction_add(reaction, user):
-    channel = reaction.message.channel
-    async for use in reaction.users():
-        if reaction.emoji == '👍':
-            await channel.send('Ravi de t\'aider {0}, merci pour ton {1}'.format(user.name, reaction.emoji))
+    if(reaction.message.author.name == "Shiny_bot"):
+        channel = reaction.message.channel
+        async for use in reaction.users():
+            if reaction.emoji == '👍':
+                await channel.send('Ravi de t\'aider {0}, merci pour ton {1}'.format(user.name, reaction.emoji))
 
 @bot.event
 async def on_command_error(ctx, error):
